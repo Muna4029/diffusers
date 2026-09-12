@@ -17,7 +17,10 @@ import torch
 import torch.nn as nn
 
 from ...configuration_utils import ConfigMixin, register_to_config
-from ...loaders import FromSingleFileMixin
+try:
+    from ...loaders import FromSingleFileMixin
+except ImportError:
+    FromSingleFileMixin = object
 from ...utils.accelerate_utils import apply_forward_hook
 from ..attention_processor import (
     ADDED_KV_ATTENTION_PROCESSORS,
