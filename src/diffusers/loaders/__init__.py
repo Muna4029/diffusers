@@ -57,8 +57,14 @@ if is_torch_available():
     _import_structure["unet"] = ["UNet2DConditionLoadersMixin"]
     _import_structure["utils"] = ["AttnProcsLayers"]
 
+    # FromSingleFileMixin is always registered in the import structure so that
+    # modules importing it (e.g., autoencoder_kl.py) can resolve the import.
+    # The actual submodule import will fail at access time if transformers is
+    # not available, which is more informative than an ImportError at module
+    # load time.
+    _import_structure["single_file"] = ["FromSingleFileMixin"]
+
     if is_transformers_available():
-        _import_structure["single_file"] = ["FromSingleFileMixin"]
         _import_structure["lora"] = ["LoraLoaderMixin", "StableDiffusionXLLoraLoaderMixin"]
         _import_structure["textual_inversion"] = ["TextualInversionLoaderMixin"]
         _import_structure["ip_adapter"] = ["IPAdapterMixin"]
@@ -71,10 +77,15 @@ if TYPE_CHECKING or DIFFUSERS_SLOW_IMPORT:
         from .unet import UNet2DConditionLoadersMixin
         from .utils import AttnProcsLayers
 
+        # FromSingleFileMixin is imported here unconditionally (when torch is
+        # available) so that the lazy module can resolve it. The actual
+        # single_file module will fail to load if transformers is not
+        # available, but that is a more specific error.
+        from .single_file import FromSingleFileMixin
+
         if is_transformers_available():
             from .ip_adapter import IPAdapterMixin
             from .lora import LoraLoaderMixin, StableDiffusionXLLoraLoaderMixin
-            from .single_file import FromSingleFileMixin
             from .textual_inversion import TextualInversionLoaderMixin
 
     from .peft import PeftAdapterMixin
