@@ -21,13 +21,6 @@ from urllib.parse import urlparse
 
 import requests
 import yaml
-from transformers import (
-    CLIPTextConfig,
-    CLIPTextModel,
-    CLIPTextModelWithProjection,
-    CLIPTokenizer,
-)
-
 from ..models import UNet2DConditionModel
 from ..schedulers import (
     DDIMScheduler,
@@ -39,7 +32,16 @@ from ..schedulers import (
     LMSDiscreteScheduler,
     PNDMScheduler,
 )
-from ..utils import is_accelerate_available, logging
+from ..utils import is_accelerate_available, is_transformers_available, logging
+
+
+if is_transformers_available():
+    from transformers import (
+        CLIPTextConfig,
+        CLIPTextModel,
+        CLIPTextModelWithProjection,
+        CLIPTokenizer,
+    )
 
 
 if is_accelerate_available():

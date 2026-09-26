@@ -15,13 +15,16 @@ import os
 import re
 
 from huggingface_hub.utils import validate_hf_hub_args
-from transformers import AutoFeatureExtractor
-
 from ..models.modeling_utils import load_state_dict
 from ..utils import (
+    is_transformers_available,
     logging,
 )
 from ..utils.hub_utils import _get_model_file
+
+
+if is_transformers_available():
+    from transformers import AutoFeatureExtractor
 from .single_file_utils import (
     create_diffusers_controlnet_model_from_ldm,
     create_diffusers_unet_model_from_ldm,
