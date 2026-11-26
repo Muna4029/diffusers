@@ -100,13 +100,13 @@ class EMAModelTests(unittest.TestCase):
         # Now the EMA'd parameters won't be equal to the original model parameters.
         orig_params = list(unet_pseudo_updated_step_one.parameters())
         for s_param, param in zip(ema_unet.shadow_params, orig_params):
-            assert ~torch.allclose(s_param, param)
+            assert not torch.allclose(s_param, param)
 
         # Ensure this is the case when we take multiple EMA steps.
         for _ in range(4):
             ema_unet.step(unet.parameters())
         for s_param, param in zip(ema_unet.shadow_params, orig_params):
-            assert ~torch.allclose(s_param, param)
+            assert not torch.allclose(s_param, param)
 
     def test_consecutive_shadow_params_updated(self):
         # If we call EMA step after a backpropagation consecutively for two times,
@@ -124,7 +124,7 @@ class EMAModelTests(unittest.TestCase):
         step_two_shadow_params = ema_unet.shadow_params
 
         for step_one, step_two in zip(step_one_shadow_params, step_two_shadow_params):
-            assert ~torch.allclose(step_one, step_two)
+            assert not torch.allclose(step_one, step_two)
 
     def test_zero_decay(self):
         # If there's no decay even if there are backprops, EMA steps

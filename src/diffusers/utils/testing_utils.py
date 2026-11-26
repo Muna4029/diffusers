@@ -115,8 +115,17 @@ def print_tensor_test(tensor, filename="test_corrections.txt", expected_tensor_n
     # format is usually:
     # expected_slice = np.array([-0.5713, -0.3018, -0.9814, 0.04663, -0.879, 0.76, -1.734, 0.1044, 1.161])
     output_str = tensor_str.replace("tensor", f"{expected_tensor_name} = np.array")
-    test_file, test_class, test_fn = test_name.split("::")
-    test_fn = test_fn.split()[0]
+
+    # Guard against missing PYTEST_CURRENT_TEST environment variable
+    if test_name:
+        try:
+            test_file, test_class, test_fn = test_name.split("::")
+            test_fn = test_fn.split()[0]
+        except Exception:
+            test_file, test_class, test_fn = "<unknown>", "<unknown>", "<unknown>"
+    else:
+        test_file, test_class, test_fn = "<unknown>", "<unknown>", "<unknown>"
+
     with open(filename, "a") as f:
         print(";".join([test_file, test_class, test_fn, output_str]), file=f)
 
@@ -337,7 +346,9 @@ def load_numpy(arry: Union[str, np.ndarray], local_path: Optional[str] = None) -
     if isinstance(arry, str):
         if local_path is not None:
             # local_path can be passed to correct images of tests
-            return Path(local_path, arry.split("/")[-5], arry.split("/")[-2], arry.split("/")[-1]).as_posix()
+            # Construct the local path and load the numpy array from it rather than returning a path string
+            path = Path(local_path, arry.split("/")[-5], arry.split("/")[-2], arry.split("/")[-1])
+            arry = np.load(path)
         elif arry.startswith("http://") or arry.startswith("https://"):
             response = requests.get(arry)
             response.raise_for_status()
@@ -855,12 +866,15 @@ def _is_torch_fp64_available(device):
     import torch
 
     try:
+        # Ensure device is a torch.device for consistent handling below
+        device = torch.device(device)
         x = torch.zeros((2, 2), dtype=torch.float64).to(device)
         _ = torch.mul(x, x)
         return True
 
     except Exception as e:
-        if device.type == "cuda":
+        # device is now guaranteed to be a torch.device, so checking device.type is safe
+        if hasattr(device, "type") and device.type == "cuda":
             raise ValueError(
                 f"You have passed a device of type 'cuda' which should work with 'fp64', but 'cuda' does not seem to be correctly installed on your machine: {e}"
             )
@@ -882,7 +896,11 @@ if is_torch_available():
 # This dispatches a defined function according to the accelerator from the function definitions.
 def _device_agnostic_dispatch(device: str, dispatch_table: Dict[str, Callable], *args, **kwargs):
     if device not in dispatch_table:
-        return dispatch_table["default"](*args, **kwargs)
+        default = dispatch_table.get("default")
+        # default may be a callable or a static value (e.g., 0 or None). If callable, call it, else return it.
+        if callable(default):
+            return default(*args, **kwargs)
+        return default
 
     fn = dispatch_table[device]
 

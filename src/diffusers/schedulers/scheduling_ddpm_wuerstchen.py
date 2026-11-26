@@ -19,11 +19,21 @@ import math
 from dataclasses import dataclass
 from typing import List, Optional, Tuple, Union
 
-import torch
+
+# Import torch optionally to avoid making it a hard dependency at import time.
+# Functions that require torch should perform lazy imports (e.g., import randn_tensor
+# from ..utils.torch_utils inside those functions) so that importing this module
+# does not fail when torch is not installed.
+try:
+    import torch  # type: ignore
+except Exception:
+    torch = None  # type: ignore
 
 from ..configuration_utils import ConfigMixin, register_to_config
 from ..utils import BaseOutput
-from ..utils.torch_utils import randn_tensor
+
+# Note: randn_tensor is imported lazily inside functions that require it to
+# prevent forcing a hard dependency on torch at module import time.
 from .scheduling_utils import SchedulerMixin
 
 

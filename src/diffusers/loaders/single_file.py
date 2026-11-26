@@ -48,7 +48,7 @@ REFINER_PIPELINES = [
 def _extract_repo_id_and_weights_name(pretrained_model_name_or_path):
     pattern = r"([^/]+)/([^/]+)/(?:blob/main/)?(.+)"
     weights_name = None
-    repo_id = (None,)
+    repo_id = None
     for prefix in VALID_URL_PREFIXES:
         pretrained_model_name_or_path = pretrained_model_name_or_path.replace(prefix, "")
     match = re.match(pattern, pretrained_model_name_or_path)
@@ -230,7 +230,7 @@ class FromSingleFileMixin:
         local_files_only = kwargs.pop("local_files_only", None)
         revision = kwargs.pop("revision", None)
         torch_dtype = kwargs.pop("torch_dtype", None)
-        use_safetensors = kwargs.pop("use_safetensors", True)
+        use_safetensors = kwargs.pop("use_safetensors", None)
 
         class_name = cls.__name__
         file_extension = pretrained_model_link_or_path.rsplit(".", 1)[-1]
